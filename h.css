@@ -1,0 +1,23 @@
+th
+{
+color:#E35411;
+text-align: left;
+letter-spacing: 3px;
+font-size: 40px;
+}
+td
+{
+text-align: justify;
+letter-spacing: 3px;
+font-size:15px;
+color:#F44D2F  ;
+}
+
+body
+{
+background-image:url("oo.jpg");
+}
+a{
+color:#E35411;
+text-decoration:none;
+}
