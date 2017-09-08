@@ -1,0 +1,326 @@
+controller.java
+package com.bnymellon.presentation.controller;
+
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.bnymellon.presentation.daoImpl.daoImpl;
+import com.bnymellon.presentation.model.emp;
+
+@RestController
+@RequestMapping("/v1")
+
+public class controller {
+	@Autowired
+	private daoImpl dao;
+	
+	@CrossOrigin
+	@GetMapping("/employees")
+	public List<emp> getAllEmployee(){
+		
+		return dao.getAllEmployee();
+		
+	}
+	@CrossOrigin
+    @PostMapping(value = "/employees")
+    public ResponseEntity<Object> insertEmployee(@RequestBody emp emp) {
+          dao.save(emp);
+          return new ResponseEntity<Object>(emp, HttpStatus.OK);
+    }
+	@CrossOrigin
+    @PutMapping("/employees/{employeeId}")
+    public ResponseEntity<Object> updateEmployee(@PathVariable int employeeId, @RequestBody emp e) {
+         int pro= dao.update(employeeId, e);
+         System.out.println(pro);
+         if(pro==0)
+         {
+        	 return new ResponseEntity<Object>("No employee found for Id"+ employeeId,HttpStatus.NOT_FOUND);
+         }
+          return new ResponseEntity<Object>("employee udpated with ID " + employeeId, HttpStatus.OK);
+    }
+
+	@PostConstruct
+	public void init()
+	{
+		System.out.println("Init Method Started");
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		service.scheduleAtFixedRate(dao, 0, 30, TimeUnit.SECONDS);
+	}
+	
+	
+
+}
+
+
+
+dao.java
+package com.bnymellon.presentation.dao;
+
+import java.util.List;
+
+import com.bnymellon.presentation.model.emp;
+
+public interface dao {
+	public int save(emp e);
+	public int  update(int searchByEmployeeId,emp newEmployee);
+	public List<emp> getAllEmployee();
+
+}
+
+
+
+daoImpl.java
+package com.bnymellon.presentation.daoImpl;
+
+import java.text.SimpleDateFormat;
+import java.util.Iterator;
+import java.util.List;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import com.bnymellon.presentation.dao.dao;
+import com.bnymellon.presentation.model.emp;
+import com.bnymellon.presentation.util.EmpRowMapper;
+import com.bnymellon.presentation.util.FileReadClass;
+
+public class daoImpl implements dao,Runnable {
+	private JdbcTemplate template;
+	
+	public JdbcTemplate getTemplate() {
+		return template;
+	
+	}
+	public void setTemplate(JdbcTemplate template) {
+		this.template = template;
+	}
+	
+	public daoImpl() {
+		super();
+	}
+	
+	
+	public int save(emp e) {
+		 String testDate= new SimpleDateFormat("dd-MMM-yy").format(e.getJoiningDate());
+
+		String query = "INSERT INTO xbbnhmp_prsnt VALUES('" + e.getName() + "','" + e.getEmployeeId() + "','" + e.getVoip() + "','" + e.getDeskNo() + "','" + testDate + "')";
+		System.out.println(query);
+		return template.update(query);
+	}
+	public List<emp> getAllEmployee() {
+
+		List<emp> allEmployee = null;
+		String query = "select * from xbbnhmp_prsnt";
+		System.out.println(query);
+		allEmployee = template.query(query, new EmpRowMapper());
+		System.out.println(allEmployee);
+		return allEmployee;
+	}
+public emp a()
+{
+	
+	Iterator<emp> itr=getAllEmployee().iterator();
+	emp n=null;
+	while(itr.hasNext())
+	{
+		n=itr.next();
+		
+		
+		
+		
+	}
+	return n;
+	
+}	
+public int update(int searchByEmployeeId, emp newEmployee) {
+		
+		String testDate= new SimpleDateFormat("dd-MMM-yy").format(newEmployee.getJoiningDate());
+		String query = "UPDATE xbbnhmp_prsnt SET name='" + newEmployee.getName() + "' ,employee_id='"
+				+ newEmployee.getEmployeeId() + "',voip='" + newEmployee.getVoip()
+				+ "',desk_no='" + newEmployee.getDeskNo() + "',joining_date='" + testDate+
+				"' WHERE employee_id="
+				+ searchByEmployeeId;
+
+		System.out.println(query);
+		return template.update(query);
+
+	}
+
+
+public int backgroundUpdate(){
+	emp emp1=FileReadClass.fetchFile();
+	String query="UPDATE xbbnhmp_prsnt SET name='"+emp1.getName()+"' WHERE employee_id="+emp1.getEmployeeId();
+	System.out.println(query);
+	return template.update(query);
+}
+
+@Override
+public void run() {
+	// TODO Auto-generated method stub
+	
+	System.out.println("Updating Data !!");
+	backgroundUpdate();
+	
+	System.out.println("Update completed !!");
+	a();
+	
+	
+	
+	
+}
+}
+emp.java
+
+package com.bnymellon.presentation.model;
+
+import java.sql.Date;
+
+public class emp {
+	
+	private String name;
+	private String employeeId;
+	private int voip;
+	private int deskNo;
+	private Date joiningDate;
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getEmployeeId() {
+		return employeeId;
+	}
+	public void setEmployeeId(String employeeId) {
+		this.employeeId = employeeId;
+	}
+	public int getVoip() {
+		return voip;
+	}
+	public void setVoip(int voip) {
+		this.voip = voip;
+	}
+	public int getDeskNo() {
+		return deskNo;
+	}
+	public void setDeskNo(int deskNo) {
+		this.deskNo = deskNo;
+	}
+	public Date getJoiningDate() {
+		return joiningDate;
+	}
+	public void setJoiningDate(Date joiningDate) {
+		this.joiningDate = joiningDate;
+	}
+	public emp(String name, String employeeId, int voip, int deskNo,
+			Date joiningDate) {
+		super();
+		this.name = name;
+		this.employeeId = employeeId;
+		this.voip = voip;
+		this.deskNo = deskNo;
+		this.joiningDate = joiningDate;
+	}
+	public emp() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	@Override
+	public String toString() {
+		return "emp [name=" + name + ", employeeId=" + employeeId + ", voip=" + voip + ", deskNo=" + deskNo
+				+ ", joiningDate=" + joiningDate + "]";
+	}
+	
+	
+	
+
+}
+
+
+
+emprowmapper
+package com.bnymellon.presentation.util;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.springframework.jdbc.core.RowMapper;
+
+import com.bnymellon.presentation.model.emp;
+
+public class EmpRowMapper implements RowMapper<emp> {
+	public emp mapRow(ResultSet rs, int rowNum) throws SQLException {
+		/*Emp tempEmp = new Emp(rs.getInt(1), rs.getString(2), rs.getFloat(3),
+				rs.getString(4));*/
+		emp tempEmployees = new emp(rs.getString(1), rs.getString(2), rs.getInt(3),
+				rs.getInt(4),rs.getDate(5));
+		System.out.println(tempEmployees);
+
+		return tempEmployees;
+	}
+
+}
+
+
+filereader
+package com.bnymellon.presentation.util;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
+import com.bnymellon.presentation.model.emp;
+
+public class FileReadClass {
+	static emp employee;
+
+	public emp getEmployee() {
+		return employee;
+	}
+
+	public void setEmployee(emp employee) {
+		this.employee = employee;
+	}
+	
+	public static emp fetchFile()
+	{
+		
+		String filePath="C:/Data/XBBNHMP/employee.txt";
+		System.out.println("File Path :" +filePath);
+		try{
+			BufferedReader br =new BufferedReader(new FileReader(filePath));
+		
+		
+		String line=new String();
+		while ((line = br.readLine()) != null) {
+			employee=new emp();
+			String s[]=line.split(",");
+			employee.setEmployeeId(s[1]);
+			employee.setName(s[0]);
+		}
+		}
+		catch(Exception e){System.out.println("Caught exception "+e);}
+		System.out.println(employee.getName()+" \n"+employee.getEmployeeId());
+		return employee;
+	}
+	
+	
+}
+
+
+
+
