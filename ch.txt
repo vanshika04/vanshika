@@ -1,0 +1,61 @@
+DASF provides a set of interfaces that bridges the security requirements of different Pershing
+Product Channels and already existing Pershing security infrastructure, thereby leveraging existing
+security systems.
+DASF security interfaces follow a tiered approach wherein different Pershing Product Channels
+interact with a single tier of standard security interfaces. The standard security tier builds on top of
+a set of core security interfaces that integrate with existing Pershing back end systems to
+collectively support the different aspects of a security framework requirement.
+The above approach provides the following advantages over existing security model. It leverages
+current investment in Pershing security systems, Simplifies development by allowing all Pershing
+products to use a common set of services, Provides seamless integration with Pershing customers and
+vendors, allows applications and security services to evolve independently, Allows ease of
+administration of enterprise-wide security information through a Unified Security Administration
+interface.
+DASF uses iNautilus services -based framework but can be extended to other platforms, and not
+specific to Java platforms.
+Distributed Application Security Framework (DASF) creates iNautilus based Service integrating all
+entitlements/authentication data important to access any of Pershing applications / customer data.
+It has an easy-to-use Request/Response design making. It is easy for other groups / IBDs to use this
+service.
+Features of DASF
+Authentication
+Authentication framework in iNautilus is based upon Java Authentication and Authorization Service
+(JAAS). The ‘iNautilus Authentication service’ is the single point controller for all authentication
+purposes inside Inautilus domain. This Authentication Service is a system service that is started
+automatically with the Domain Service. Once the Authentication Service has authenticated a user,
+s/he will be able to use an instance of application service or web Service anywhere in the Inautilus
+management domain without being re-authenticated.
+A BNY Securities Group Co.
+DASF DEVELOPER’S GUIDE PAGE 8 OF 68
+
+
+The modus operandi is as follows, User provides credential and the iNautilus authentication service
+uses its authentication scheme to validate the credential. If the credential is verified then
+authentication service issues a Principal. The "authentication scheme" specification and
+implementation provides a means to specialize the authentication and authorization.
+Currently iNautilus supports two kinds of authentication schemes
+SSO Authentication
+Password based Authentication
+Password based Authentication
+Pershing applications require all of its users to be a valid user. So it authenticates the user whenever
+he/she tries to access the feature. The process for Password Based Authentication is as follows.
+1. User requests for a resource.
+2. The WebApplication service checks whether the resource is protected by a role.
+3. Resource requires some role for it to be accessed.
+4. WebApplication service checks whether the user is authenticated.
+5. If the user is not authenticated, it sends __not_logged_in__.jsp (login page for the user to
+submit the username and password)
+6. The user provides username and password. The webapplication now builds a
+PasswordCredentials object with the supplied username and password.
+7. WebApplication now invokes authenticate() on the AuthenticationService by passing the
+PasswordCredentials.
+8. Authentication Service receives the PasswordCredentials and extracts the username and
+password, builds a TAP_BROKER_SESSION_RQST (a utility to verify the credentials ) with the
+extracted username and password and finally forwards the TAP request to the TAP gateway.
+9. The Tap gateway sends the request to the PCFN system and receives the
+TAP_BROKER_SESSION_RSP contains the information, whether the supplied credentials were
+valid or not.
+10. If the supplied credentials are valid, the authentication service builds a Principal object and
+sets it to the user. If the supplied credentials were not valid and exception would be
+thrown, which again presents the user with login page.
+11. As the authentication is successful, the request is now forwarded to the requested resource.
