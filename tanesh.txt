@@ -1,0 +1,15 @@
+@Override
+	public ReqValidateRsp validate() {
+		ReqValidateRsp validateRsp = null;
+		validateRsp = super.validate();
+		
+			if(ReturnCode.SUCCESS == validateRsp.getReturnCode()){
+				if (scrollKey == null || AnnuityConstants.EMPTY_STRING.equals(Util.makeNonNullString(scrollKey))){
+					scrollKey = AnnuityConstants.SPACE_STRING;
+				}
+				if( itemRequested < 1 || itemRequested > AnnuityConstants.MAX_ROWS_ALLOWED){
+					itemRequested = AnnuityConstants.MAX_ROWS_ALLOWED;
+				}			
+			}
+			return validateRsp;
+		}
